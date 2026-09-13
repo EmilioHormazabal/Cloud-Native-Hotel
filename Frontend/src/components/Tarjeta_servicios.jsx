@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { obtenerServicio } from "../services/servicioService"
+import { obtenerServicio, eliminarServicio } from "../services/servicioService"
 import { useNavigate } from "react-router-dom"
 import Modificar_servicios from "./Modificar_servicios"
 
@@ -20,6 +20,13 @@ function Tarjeta_servicios({ id, admin }) {
         setModificando(true)
     }
 
+    const eliminar = async (id) => {
+        if (confirm(`¿Eliminar el servicio "${servicio.nombre}"?`)) {
+            await eliminarServicio(id)
+            setShow(false)
+        }
+    }
+
     useEffect(()=>{
         const cargarServicio = async() => {
             const res = await obtenerServicio(id)
@@ -30,7 +37,7 @@ function Tarjeta_servicios({ id, admin }) {
             }
         }
         cargarServicio()
-    },[id])
+    },[id, modificando])
 
     return(
         <>
@@ -44,6 +51,9 @@ function Tarjeta_servicios({ id, admin }) {
                 <button className="mt-3" onClick={()=>setId(id)}>Ver detalles</button>
                 {admin &&
                     <button className="mt-3" onClick={()=>modificar(id)}>Modificar</button>
+                }
+                {admin &&
+                    <button className="mt-3" onClick={()=>eliminar(id)}>Eliminar</button>
                 }
             </section>
         </article>

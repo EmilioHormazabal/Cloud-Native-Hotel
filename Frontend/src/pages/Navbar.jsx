@@ -45,7 +45,7 @@ function Navbar() {
                             </li>
                             )}
                             <li className="nav-item">
-                                <Link className="nav-link active nav_link_style" aria-current="page" to="/login" onClick={cerrarSesion}>Cerrar sesion</Link>
+                                <Link className="nav-link active nav_link_style" aria-current="page" to="/" onClick={cerrarSesion}>Cerrar sesion</Link>
                             </li>
                             </>
                         ) : (

@@ -13,7 +13,7 @@ function Panel_admin() {
             setServicios(await listarServicios())
         }
         cargarServicios()
-    },[])
+    },[showFormulario])
 
     return(
         <>

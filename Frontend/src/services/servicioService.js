@@ -18,3 +18,7 @@ export async function registrarServicio(servicio) {
 export async function modificarServicio(id, servicio) {
     return apiRequest({ baseURL: BASE, url: `/api/v1/servicio/put/${id}`, method: 'put', data: servicio })
 }
+
+export async function eliminarServicio(id) {
+    return apiRequest({ baseURL: BASE, url: `/api/v1/servicio/delete/${id}`, method: 'delete' })
+}

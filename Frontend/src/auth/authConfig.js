@@ -5,6 +5,7 @@ export const msalConfig = {
         clientId: environment.azure.clientId,
         authority: environment.azure.authority,
         redirectUri: environment.azure.redirectUri,
+        postLogoutRedirectUri: "http://localhost:5173",
     },
     cache: {
         cacheLocation: "localStorage",
