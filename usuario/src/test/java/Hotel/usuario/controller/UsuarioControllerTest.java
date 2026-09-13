@@ -6,7 +6,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import Hotel.usuario.dto.UsuarioResponseDto;
+import Hotel.usuario.entity.Usuario;
 import Hotel.usuario.service.UsuarioService;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -44,7 +44,7 @@ class UsuarioControllerTest {
 
     @Test
     void list_conRolAdmin_devuelve200() throws Exception {
-        when(ser.u_listar()).thenReturn(List.of(new UsuarioResponseDto()));
+        when(ser.u_listar()).thenReturn(List.of(new Usuario()));
         mvc.perform(get("/api/v1/usuario/list")
                 .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_ADMIN"))))
             .andExpect(status().isOk());
@@ -52,7 +52,7 @@ class UsuarioControllerTest {
 
     @Test
     void get_autenticado_devuelve200() throws Exception {
-        when(ser.u_recuperar(anyInt())).thenReturn(new UsuarioResponseDto());
+        when(ser.u_recuperar(anyInt())).thenReturn(new Usuario());
         mvc.perform(get("/api/v1/usuario/get/1")
                 .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_CLIENTE"))))
             .andExpect(status().isOk());
