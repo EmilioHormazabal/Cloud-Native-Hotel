@@ -16,8 +16,8 @@ const RouterConfig = () => (
         <Route path="/registro" element={<Registrarse/>}/>
         <Route path="/login" element={<Login/>}/>
         <Route path="/mi_cuenta" element={<RequireAuth><Mi_cuenta/></RequireAuth>}/>
-        <Route path="/servicios" element={<Servicios/>}/>
-        <Route path="/servicios/detalle" element={<Servicios_detalle/>}/>
+        <Route path="/servicios" element={<RequireAuth><Servicios/></RequireAuth>}/>
+        <Route path="/servicios/detalle" element={<RequireAuth><Servicios_detalle/></RequireAuth>}/>
         <Route path="/mis_reservas" element={<RequireAuth><Reservas/></RequireAuth>}/>
         <Route path="/mis_reservas/detalle" element={<RequireAuth><Reservas_detalle/></RequireAuth>}/>
         <Route path="/PanelAdministradores" element={<RequireAuth roles={['Admin']}><Panel_admin/></RequireAuth>}/>

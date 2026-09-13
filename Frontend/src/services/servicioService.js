@@ -1,6 +1,7 @@
 import { apiRequest } from '../auth/apiClient.js'
+import { environment } from '../utils/enviroment.ts'
 
-const BASE = 'http://localhost:8082'
+const BASE = environment.apiBaseUrl_02
 
 export async function listarServicios() {
     return apiRequest({ baseURL: BASE, url: '/api/v1/servicio/list' })
