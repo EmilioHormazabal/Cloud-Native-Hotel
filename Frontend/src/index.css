@@ -1,0 +1,13 @@
+body{
+  min-height: 100vh;
+  background: linear-gradient(#9d0880, #ff9696);
+  background-repeat: no-repeat;
+  background-size: cover;
+  margin: 0;
+}
+body::-webkit-scrollbar {
+  display: none;
+}
+form::-webkit-scrollbar {
+  display: none;
+}

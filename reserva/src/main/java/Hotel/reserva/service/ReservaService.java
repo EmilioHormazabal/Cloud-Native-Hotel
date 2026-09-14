@@ -1,6 +1,7 @@
 package Hotel.reserva.service;
 
 import Hotel.reserva.entity.Reserva;
+import Hotel.reserva.exception.EntidadNoEncontradaException;
 import Hotel.reserva.repository.ReservaRepository;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,41 +12,44 @@ public class ReservaService {
     
     @Autowired
     private ReservaRepository rep;
-    
-    public Reserva r_guardar(Reserva r){
-        /*-LOGICA NEGOCIO-*/
-        return rep.save(r);
-    };
+
+    public Reserva r_guardar(Reserva req){
+        return rep.save(req);
+    }
     
     public Reserva r_recuperar(Integer id){
-        /*-LOGICA NEGOCIO-*/
-        return rep.findById(id).orElse(null);
-    };
+        return rep.findById(id)
+                .orElseThrow(() -> new EntidadNoEncontradaException("RES-001",
+                        "No existe una reserva con id: " + id));
+    }
     
     public List<Reserva> r_listar(){
-        /*-LOGICA NEGOCIO-*/
         return rep.findAll();
-    };
+    }
+
+    public List<Reserva> r_listar_por_usuario(Integer idUsuario){
+        return rep.findByIdUsuario(idUsuario);
+    }
     
-    public Reserva r_modificar(Reserva r){
-        /*-LOGICA NEGOCIO-*/
-        Reserva r_mod = rep.findById(r.getId()).orElse(null);
-        
-        if(r_mod!=null){
-            r_mod.setF_reserva(r.getF_reserva());
-            r_mod.setF_termino(r.getF_termino());
-            r_mod.setTipo_reserva(r.getTipo_reserva());
-            r_mod.setC_personas(r.getC_personas());
-            r_mod.setValor_final(r.getValor_final());
-                    
-            return rep.save(r_mod);
-        }else{
-            return null;
-        }
-    };
+    public Reserva r_modificar(Integer id, Reserva req){
+        Reserva r_mod = rep.findById(id)
+                .orElseThrow(() -> new EntidadNoEncontradaException("RES-001",
+                        "No existe una reserva con id: " + id));
+        r_mod.setIdUsuario(req.getIdUsuario());
+        r_mod.setFechaReserva(req.getFechaReserva());
+        r_mod.setFechaTermino(req.getFechaTermino());
+        r_mod.setTipoReserva(req.getTipoReserva());
+        r_mod.setCantidadPersonas(req.getCantidadPersonas());
+        r_mod.setValorFinal(req.getValorFinal());
+        return rep.save(r_mod);
+    }
     
     public Boolean r_eliminar(Integer id){
+        if (!rep.existsById(id)) {
+            throw new EntidadNoEncontradaException("RES-001",
+                    "No existe una reserva con id: " + id);
+        }
         rep.deleteById(id);
         return true;
-    };
+    }
 }

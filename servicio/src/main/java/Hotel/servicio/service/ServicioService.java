@@ -1,6 +1,7 @@
 package Hotel.servicio.service;
 
 import Hotel.servicio.entity.Servicio;
+import Hotel.servicio.exception.EntidadNoEncontradaException;
 import Hotel.servicio.repository.ServicioRepository;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,42 +12,42 @@ public class ServicioService {
     
     @Autowired
     private ServicioRepository rep;
-    
-    public Servicio s_guardar(Servicio s){
-        /*-LOGICA NEGOCIO-*/
-        return rep.save(s);
-    };
+
+    public Servicio s_guardar(Servicio req){
+        return rep.save(req);
+    }
     
     public Servicio s_recuperar(Integer id){
-        /*-LOGICA NEGOCIO-*/
-        return rep.findById(id).orElse(null);
-    };
+        return rep.findById(id)
+                .orElseThrow(() -> new EntidadNoEncontradaException("SER-001",
+                        "No existe un servicio con id: " + id));
+    }
     
     public List<Servicio> s_listar(){
-        /*-LOGICA NEGOCIO-*/
         return rep.findAll();
-    };
+    }
     
-    public Servicio s_modificar(Servicio s){
-        /*-LOGICA NEGOCIO-*/
-        Servicio s_mod = rep.findById(s.getId()).orElse(null);
-        
-        if(s_mod!=null){
-            s_mod.setTipo_servicio(s.getTipo_servicio());
-            s_mod.setPrecio(s.getPrecio());
-            s_mod.setN_habitacion(s.getN_habitacion());
-            s_mod.setCapacidad(s.getCapacidad());
-            s_mod.setDisponible(s.getDisponible());
-            s_mod.setNivel_servicio(s.getNivel_servicio());
-                    
-            return rep.save(s_mod);
-        }else{
-            return null;
-        }
-    };
+    public Servicio s_modificar(Integer id, Servicio req){
+        Servicio s_mod = rep.findById(id)
+                .orElseThrow(() -> new EntidadNoEncontradaException("SER-001",
+                        "No existe un servicio con id: " + id));
+        s_mod.setNombre(req.getNombre());
+        s_mod.setDescripcion(req.getDescripcion());
+        s_mod.setTipoServicio(req.getTipoServicio());
+        s_mod.setPrecio(req.getPrecio());
+        s_mod.setNumHabitacion(req.getNumHabitacion());
+        s_mod.setCapacidad(req.getCapacidad());
+        s_mod.setDisponible(req.getDisponible());
+        s_mod.setNivelServicio(req.getNivelServicio());
+        return rep.save(s_mod);
+    }
     
     public Boolean s_eliminar(Integer id){
+        if (!rep.existsById(id)) {
+            throw new EntidadNoEncontradaException("SER-001",
+                    "No existe un servicio con id: " + id);
+        }
         rep.deleteById(id);
         return true;
-    };
+    }
 }

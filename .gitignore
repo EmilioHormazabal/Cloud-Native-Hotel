@@ -1,0 +1,60 @@
+# IntelliJ IDEA
+.idea/
+*.iws
+*.iml
+*.ipr
+
+# Maven / Java
+target/
+*.class
+*.jar
+*.war
+*.ear
+.mvn/wrapper/maven-wrapper.jar
+
+# Logs y temporales
+*.log
+mvn-test.log
+mvn_err.txt
+mvn_out.txt
+*.bak
+
+# Entorno (credenciales)
+.env
+.env.*
+# Excepcion: .env.example se versiona como template
+!.env.example
+
+# Dependencias (frontend React futuro)
+node_modules/
+**/node_modules/
+
+# VS Code
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+.*-lock.json
+
+# NetBeans
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+# Eclipse / Spring Tool Suite (STS)
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+# Archivos de ayuda generados por Spring Initializr
+HELP.md
+
+# Reportes locales de validacion (pueden contener tokens)
+scripts/e2e_report.txt

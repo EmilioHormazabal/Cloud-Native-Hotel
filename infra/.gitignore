@@ -1,0 +1,7 @@
+# Estado y secretos de Terraform - nunca se versionan
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+*.tfplan
+.terraform.lock.hcl
