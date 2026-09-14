@@ -55,3 +55,6 @@ Thumbs.db
 
 # Archivos de ayuda generados por Spring Initializr
 HELP.md
+
+# Reportes locales de validacion (pueden contener tokens)
+scripts/e2e_report.txt
