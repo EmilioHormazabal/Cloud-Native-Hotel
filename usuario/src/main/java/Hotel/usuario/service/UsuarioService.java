@@ -36,6 +36,12 @@ public class UsuarioService {
         return u;
     }
     
+    public Usuario u_por_correo(String correo){
+        return rep.findByCorreo(correo)
+                .orElseThrow(() -> new EntidadNoEncontradaException("USER-006",
+                        "No existe un usuario registrado con el correo: " + correo));
+    }
+
     public Usuario u_recuperar(Integer id){
         return rep.findById(id)
                 .orElseThrow(() -> new EntidadNoEncontradaException("USER-005",
