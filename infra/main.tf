@@ -155,11 +155,12 @@ resource "aws_security_group" "ec2" {
 
 # EC2 frontend: nginx + build React (se sube dist/ por scp)
 resource "aws_instance" "frontend" {
-  ami                    = data.aws_ami.al2023.id
-  instance_type          = "t2.micro"
-  key_name               = var.key_name
-  subnet_id              = aws_subnet.public.id
-  vpc_security_group_ids = [aws_security_group.ec2.id]
+  ami                         = data.aws_ami.al2023.id
+  instance_type               = "t2.micro"
+  key_name                    = var.key_name
+  subnet_id                   = aws_subnet.public.id
+  vpc_security_group_ids      = [aws_security_group.ec2.id]
+  associate_public_ip_address = true
 
   user_data = <<-EOT
 #!/bin/bash
@@ -188,11 +189,12 @@ EOT
 
 # EC2 usuario: microservicio + MySQL (los demas microservicios apuntan a su IP privada)
 resource "aws_instance" "usuario" {
-  ami                    = data.aws_ami.al2023.id
-  instance_type          = "t2.micro"
-  key_name               = var.key_name
-  subnet_id              = aws_subnet.public.id
-  vpc_security_group_ids = [aws_security_group.ec2.id]
+  ami                         = data.aws_ami.al2023.id
+  instance_type               = "t2.micro"
+  key_name                    = var.key_name
+  subnet_id                   = aws_subnet.public.id
+  vpc_security_group_ids      = [aws_security_group.ec2.id]
+  associate_public_ip_address = true
 
   user_data = <<-EOT
 #!/bin/bash
@@ -253,12 +255,13 @@ EOT
 
 # EC2 reserva/servicio: solo microservicio, BD en la instancia usuario
 resource "aws_instance" "microservicio" {
-  for_each               = local.microservicios_app
-  ami                    = data.aws_ami.al2023.id
-  instance_type          = "t2.micro"
-  key_name               = var.key_name
-  subnet_id              = aws_subnet.public.id
-  vpc_security_group_ids = [aws_security_group.ec2.id]
+  for_each                    = local.microservicios_app
+  ami                         = data.aws_ami.al2023.id
+  instance_type               = "t2.micro"
+  key_name                    = var.key_name
+  subnet_id                   = aws_subnet.public.id
+  vpc_security_group_ids      = [aws_security_group.ec2.id]
+  associate_public_ip_address = true
 
   user_data = <<-EOT
 #!/bin/bash
@@ -310,10 +313,10 @@ resource "aws_apigatewayv2_api" "http" {
 }
 
 resource "aws_apigatewayv2_authorizer" "jwt" {
-  api_id           = aws_apigatewayv2_api.http.id
-  authorizer_type  = "JWT"
-  name             = "entra-jwt"
-  identity_sources = ["$request.header.Authorization"]
+  api_id                           = aws_apigatewayv2_api.http.id
+  authorizer_type                  = "JWT"
+  name                             = "entra-jwt"
+  identity_sources                 = ["$request.header.Authorization"]
   authorizer_result_ttl_in_seconds = 0
 
   jwt_configuration {
