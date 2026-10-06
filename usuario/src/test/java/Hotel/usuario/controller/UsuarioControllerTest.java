@@ -1,6 +1,8 @@
 package Hotel.usuario.controller;
 
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -78,7 +80,7 @@ class UsuarioControllerTest {
 
     @Test
     void me_autenticado_resuelvePorPreferredUsername() throws Exception {
-        when(ser.u_por_correo("cliente.prueba@test.cl")).thenReturn(new Usuario());
+        when(ser.u_por_correo(eq("cliente.prueba@test.cl"), isNull())).thenReturn(new Usuario());
         mvc.perform(get("/api/v1/usuario/me")
                 .with(jwt().jwt(j -> j.claim("preferred_username", "cliente.prueba@test.cl"))))
             .andExpect(status().isOk());

@@ -37,7 +37,7 @@ public class UsuarioController {
     
     @GetMapping("/me")
     public Usuario uc_actual(@AuthenticationPrincipal Jwt jwt){
-        return ser.u_por_correo(correoDelToken(jwt));
+        return ser.u_por_correo(correoDelToken(jwt), jwt.getClaimAsString("name"));
     }
     
     @GetMapping("/get/{id}")
