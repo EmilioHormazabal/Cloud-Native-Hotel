@@ -11,13 +11,13 @@ $inv = { param($m,$u,$b=$null) try {
     [pscustomobject]@{ ok = $true; data = $r; error = $null }
 } catch { [pscustomobject]@{ ok = $false; data = $null; error = "$($_.Exception.Response.StatusCode.value__) $($_.Exception.Message)" } } }
 
-echo "===== 1.1 VALIDACION JWT REAL -> 200 (3 micros) ====="
+echo "===== 1.1 VALIDACION JWT REAL -> 200 (3 microservicios) ====="
 foreach ($u in @("http://localhost:8082/api/v1/servicio/list","http://localhost:8081/api/v1/reserva/list","http://localhost:8083/api/v1/usuario/list")) {
     $r = & $inv "GET" $u
     if ($r.ok) { "$u -> OK ($($r.data.Count) registros)" } else { "$u -> ERROR $($r.error)" }
 }
 
-echo "===== 1.3 CRUD ESCRITURA (Panel admin simulado) ====="
+echo "===== 1.2 CRUD ESCRITURA (Panel admin simulado) ====="
 $nuevo = @{ nombre="Servicio QA $([DateTime]::Now.ToString('HHmmss'))"; tipoServicio="habitacion"; numHabitacion=777; nivelServicio="invitado"; descripcion="creado por prueba QA"; precio=42000; capacidad=2; disponible=$true }
 $creado = & $inv "POST" "http://localhost:8082/api/v1/servicio/post" $nuevo
 $id = $creado.data.id
@@ -33,7 +33,17 @@ if ($creado.ok -and $id) {
     "POST /post -> FALLO: $(if(-not $creado.ok){$creado.error}else{"sin id en respuesta"})"
 }
 
-echo "===== 1.2 CARGA CON JWT REAL (N=200 C=20 a /servicio/list) ====="
+echo "===== 1.3 BFF (si esta corriendo en :8084) ====="
+try {
+    $r401 = Invoke-WebRequest -Method GET -Uri "http://localhost:8084/api/v1/bff/dashboard" -TimeoutSec 5 -SkipHttpErrorCheck
+    "BFF sin token -> $($r401.StatusCode) (esperado 401)"
+    $rBff = & $inv "GET" "http://localhost:8084/api/v1/bff/dashboard"
+    if ($rBff.ok) { "BFF dashboard con token -> 200" } else { "BFF dashboard con token -> ERROR $($rBff.error)" }
+} catch {
+    "BFF no esta corriendo en :8084 (se omite esta seccion)"
+}
+
+echo "===== 1.4 CARGA CON JWT REAL (N=200 C=20 a /servicio/list) ====="
 $sw = [Diagnostics.Stopwatch]::StartNew()
 $res = @(1..200 | ForEach-Object -Parallel {
     $h = [Net.Http.HttpClient]::new(); $h.Timeout = [TimeSpan]::FromSeconds(20)

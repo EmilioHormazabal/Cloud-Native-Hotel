@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Emilio Hormazabal
-# Uso: 1) abre https://localhost:5173 logueado como admin, F12 -> Consola.
+# Uso: 1) abre http://localhost:5173 logueado como admin, F12 -> Consola.
 #      2) pega el bloque "console snippet" (lineas marcadas abajo) y Enter.
 #      3) el token queda en el portapapeles. Luego en PowerShell (repo raiz):
 #         pwsh scripts\token_e2e.ps1   -> pega el token en el prompt
