@@ -9,7 +9,7 @@ export const environment = {
         redirectUri: "http://localhost:5173"
     },
 
-    apiBaseUrl_01: "https://1t7svfg0wf.execute-api.us-east-1.amazonaws.com",
-    apiBaseUrl_02: "https://1t7svfg0wf.execute-api.us-east-1.amazonaws.com",
-    apiBaseUrl_03: "https://1t7svfg0wf.execute-api.us-east-1.amazonaws.com"
+    apiBaseUrl_01: "https://diesx6267g.execute-api.us-east-1.amazonaws.com",
+    apiBaseUrl_02: "https://diesx6267g.execute-api.us-east-1.amazonaws.com",
+    apiBaseUrl_03: "https://diesx6267g.execute-api.us-east-1.amazonaws.com"
 }
