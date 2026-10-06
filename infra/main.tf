@@ -16,26 +16,28 @@ provider "aws" {
   region = "us-east-1"
 }
 
-# Stack: 4 EC2 t2.micro.
+# Stack: 5 EC2 t2.micro.
 #  - frontend: nginx + build React
-#  - usuario:  micro + MySQL (BD en la misma maquina = 1 EC2 menos)
-#  - reserva / servicio: micro
+#  - usuario:  microservicio + MySQL (BD en la misma maquina = 1 EC2 menos)
+#  - reserva / servicio / bff: microservicio
 # Para probar rapido
 # NOTA: el contenido de los heredocs user_data va a columna 0 a proposito.
 # terraform fmt + espacios antes del shebang rompen la ejecucion en cloud-init.
 locals {
-  micros = {
+  microservicios = {
     usuario  = { port = 8083 }
     reserva  = { port = 8081 }
     servicio = { port = 8082 }
+    bff      = { port = 8084 }
   }
-  app_micros = {
+  microservicios_app = {
     reserva  = { port = 8081 }
     servicio = { port = 8082 }
+    bff      = { port = 8084 }
   }
-  micro_public_ip = merge(
+  microservicios_public_ip = merge(
     { usuario = aws_instance.usuario.public_ip },
-    { for k, v in aws_instance.micro : k => v.public_ip }
+    { for k, v in aws_instance.microservicio : k => v.public_ip }
   )
 }
 
@@ -52,6 +54,13 @@ data "aws_ami" "al2023" {
 # key_name vockey: par de llaves del lab de AWS Academy
 variable "key_name" {
   default = "vockey"
+}
+
+# Origenes CORS extra (el frontend en EC2 se agrega en cors_configuration)
+variable "frontend_origins" {
+  description = "Origenes CORS adicionales permitidos (p.ej. el dominio real del frontend en cloud)."
+  type        = list(string)
+  default     = ["http://localhost:5173", "http://localhost:4173"]
 }
 
 resource "random_password" "db_pass" {
@@ -98,15 +107,15 @@ resource "aws_route_table_association" "public" {
   route_table_id = aws_route_table.public.id
 }
 
-# Security Group unico para las 4 EC2
+# Security Group unico para las 5 EC2
 resource "aws_security_group" "ec2" {
   name        = "cloudnative-sg-ec2"
-  description = "EP1: 8081-8083 publicos (API Gateway + verificacion), 80 frontend, 22 SSH lab, 3306 interno entre EC2."
+  description = "EP1: 8081-8084 publicos (API Gateway + verificacion), 80 frontend, 22 SSH lab, 3306 interno entre EC2."
   vpc_id      = aws_vpc.this.id
 
   ingress {
     from_port   = 8081
-    to_port     = 8083
+    to_port     = 8084
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
     description = "API Gateway + acceso directo de verificacion"
@@ -158,6 +167,7 @@ exec > /var/log/frontend-bootstrap.log 2>&1
 set -exuo pipefail
 dnf install -y nginx
 mkdir -p /var/www/grandhotel
+chown ec2-user:ec2-user /var/www/grandhotel
 cat > /etc/nginx/conf.d/grandhotel.conf <<'NGINX'
 server {
     listen 80;
@@ -176,7 +186,7 @@ EOT
   tags = { Name = "cn-frontend", Project = "CloudNative01" }
 }
 
-# EC2 usuario: micro + MySQL (los demas micros apuntan a su IP privada)
+# EC2 usuario: microservicio + MySQL (los demas microservicios apuntan a su IP privada)
 resource "aws_instance" "usuario" {
   ami                    = data.aws_ami.al2023.id
   instance_type          = "t2.micro"
@@ -190,6 +200,7 @@ exec > /var/log/cn-usuario-bootstrap.log 2>&1
 set -exuo pipefail
 dnf install -y java-21-amazon-corretto-devel
 mkdir -p /opt/apps
+chown ec2-user:ec2-user /opt/apps
 dnf install -y https://dev.mysql.com/get/mysql80-community-release-el9-4.noarch.rpm
 dnf config-manager --enable mysql80-community
 dnf install -y mysql-community-server
@@ -240,9 +251,9 @@ EOT
   tags = { Name = "cn-usuario", Project = "CloudNative01" }
 }
 
-# EC2 reserva/servicio: solo micro, BD en la instancia usuario
-resource "aws_instance" "micro" {
-  for_each               = local.app_micros
+# EC2 reserva/servicio: solo microservicio, BD en la instancia usuario
+resource "aws_instance" "microservicio" {
+  for_each               = local.microservicios_app
   ami                    = data.aws_ami.al2023.id
   instance_type          = "t2.micro"
   key_name               = var.key_name
@@ -255,6 +266,7 @@ exec > /var/log/cn-${each.key}-bootstrap.log 2>&1
 set -exuo pipefail
 dnf install -y java-21-amazon-corretto-devel
 mkdir -p /opt/apps
+chown ec2-user:ec2-user /opt/apps
 DB_HOST='${aws_instance.usuario.private_ip}'
 DB_USER='admin'
 DB_PASS='${random_password.db_pass.result}'
@@ -289,7 +301,8 @@ resource "aws_apigatewayv2_api" "http" {
   name          = "cloudnative-ep1"
   protocol_type = "HTTP"
   cors_configuration {
-    allow_origins = ["*"]
+    # EP1: antes ["*"] (cualquier origen), ahora solo frontend propio + local
+    allow_origins = concat(var.frontend_origins, ["http://${aws_instance.frontend.public_ip}"])
     allow_methods = ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
     allow_headers = ["authorization", "content-type"]
     max_age       = 300
@@ -310,16 +323,16 @@ resource "aws_apigatewayv2_authorizer" "jwt" {
 }
 
 resource "aws_apigatewayv2_integration" "http" {
-  for_each = local.micros
+  for_each = local.microservicios
 
   api_id             = aws_apigatewayv2_api.http.id
   integration_type   = "HTTP_PROXY"
   integration_method = "ANY"
-  integration_uri    = "http://${local.micro_public_ip[each.key]}:${each.value.port}/api/v1/${each.key}/{proxy}"
+  integration_uri    = "http://${local.microservicios_public_ip[each.key]}:${each.value.port}/api/v1/${each.key}/{proxy}"
 }
 
 resource "aws_apigatewayv2_route" "http" {
-  for_each = local.micros
+  for_each = local.microservicios
 
   api_id             = aws_apigatewayv2_api.http.id
   route_key          = "ANY /api/v1/${each.key}/{proxy+}"
@@ -328,9 +341,10 @@ resource "aws_apigatewayv2_route" "http" {
   target             = "integrations/${aws_apigatewayv2_integration.http[each.key].id}"
 }
 
-# Preflight CORS sin auth: el micro responde OPTIONS (igual que en local)
+# Preflight sin auth: las rutas ANY caen en el authorizer JWT y devuelven 401
+# (el navegador exige 2xx en el preflight). Esta ruta NONE lo evita.
 resource "aws_apigatewayv2_route" "options" {
-  for_each = local.micros
+  for_each = local.microservicios
 
   api_id             = aws_apigatewayv2_api.http.id
   route_key          = "OPTIONS /api/v1/${each.key}/{proxy+}"
@@ -353,8 +367,8 @@ output "usuario_public_ip" {
   value = aws_instance.usuario.public_ip
 }
 
-output "micros_public_ip" {
-  value = { for k, v in aws_instance.micro : k => v.public_ip }
+output "microservicios_public_ip" {
+  value = { for k, v in aws_instance.microservicio : k => v.public_ip }
 }
 
 output "api_url" {
