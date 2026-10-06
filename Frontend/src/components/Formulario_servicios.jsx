@@ -14,7 +14,7 @@ function Formulario_servicios({show}){
 
     const guardarServicio = async() => {
 
-        if(precio>0&&capacidad>0&&n_habitacion>0&&t_servicio!==""&&nivel_s!==""){
+        if(precio>0&&capacidad>0&&n_habitacion>=0&&t_servicio!==""&&nivel_s!==""){
             const servicio = {
                 tipoServicio: t_servicio,
                 precio: precio,
@@ -28,7 +28,7 @@ function Formulario_servicios({show}){
             await registrarServicio(servicio)
             show(false)
         }else{
-            alert("Valores numericos deben ser mayor a 0")
+            alert("Precio y capacidad deben ser mayores a 0, y tipo/nivel de servicio son obligatorios")
         }
     }
 

@@ -13,7 +13,7 @@ function Modificar_servicios({ show }) {
     const [desc, setDesc]                   = useState("")
 
     const guardarModificacion = async() => {
-        if(precio>0&&capacidad>0&&n_habitacion>0&&t_servicio!==""&&nivel_s!==""){
+        if(precio>0&&capacidad>0&&n_habitacion>=0&&t_servicio!==""&&nivel_s!==""){
             const id = localStorage.getItem("ID_S")
             const servicio = {
                 tipoServicio: t_servicio,
@@ -28,7 +28,7 @@ function Modificar_servicios({ show }) {
             await modificarServicio(id, servicio)
             show(false)
         }else{
-            alert("Los valores numericos y los campos tipo/nivel deben estar completos")
+            alert("Precio y capacidad deben ser mayores a 0, y tipo/nivel de servicio son obligatorios")
         }
     }
 
