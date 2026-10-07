@@ -3,41 +3,47 @@ import { obtenerServicio, eliminarServicio } from "../services/servicioService"
 import { useNavigate } from "react-router-dom"
 import Modificar_servicios from "./Modificar_servicios"
 
-function Tarjeta_servicios({ id, admin }) {
+function Tarjeta_servicios({ servicio: inicial, admin }) {
 
-    const [servicio, setServicio] = useState({})
+    const [servicio, setServicio] = useState(inicial)
     const [show, setShow] = useState(true)
     const [modificando, setModificando] = useState(false)
+    const [recargar, setRecargar] = useState(false)
     const navegar = useNavigate()
 
-    const setId = (id) => {
+    const id = inicial.id
+
+    const setId = () => {
         localStorage.setItem("ID_S", id)
         navegar("/servicios/detalle")
     }
 
-    const modificar = (id) => {
+    const modificar = () => {
         localStorage.setItem("ID_S", id)
         setModificando(true)
     }
 
-    const eliminar = async (id) => {
+    const eliminar = async () => {
         if (confirm(`¿Eliminar el servicio "${servicio.nombre}"?`)) {
             await eliminarServicio(id)
             setShow(false)
         }
     }
 
+    // El dato ya viene en la lista; solo se recarga al cerrar el modal de modificacion
     useEffect(()=>{
+        if (!recargar) return
         const cargarServicio = async() => {
-            const res = await obtenerServicio(id)
-            if (res == null){
-                setShow(false)
-            }else{
-                setServicio(res)
-            }
+            setServicio(await obtenerServicio(id))
+            setRecargar(false)
         }
         cargarServicio()
-    },[id, modificando])
+    },[recargar, id])
+
+    const cerrarModificacion = (abierto) => {
+        setModificando(abierto)
+        if (!abierto) setRecargar(true)
+    }
 
     return(
         <>
@@ -48,18 +54,18 @@ function Tarjeta_servicios({ id, admin }) {
                 <p>{servicio.descripcion}</p>
                 <p className="mb-0"><strong>Precio: </strong>{servicio.precio}</p>
                 <p className="mb-1"><strong>Capacidad: </strong>{servicio.capacidad} persona(s)</p>
-                <button className="mt-3" onClick={()=>setId(id)}>Ver detalles</button>
+                <button className="mt-3" onClick={setId}>Ver detalles</button>
                 {admin &&
-                    <button className="mt-3" onClick={()=>modificar(id)}>Modificar</button>
+                    <button className="mt-3" onClick={modificar}>Modificar</button>
                 }
                 {admin &&
-                    <button className="mt-3" onClick={()=>eliminar(id)}>Eliminar</button>
+                    <button className="mt-3" onClick={eliminar}>Eliminar</button>
                 }
             </section>
         </article>
         )}
         {modificando &&
-            <Modificar_servicios show={setModificando}/>
+            <Modificar_servicios show={cerrarModificacion}/>
         }
         </>
     )

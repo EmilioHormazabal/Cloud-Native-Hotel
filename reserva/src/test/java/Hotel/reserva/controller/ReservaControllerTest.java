@@ -4,6 +4,8 @@ import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import Hotel.reserva.service.ReservaService;
@@ -31,7 +33,8 @@ class ReservaControllerTest {
     @Test
     void list_sinToken_devuelve401() throws Exception {
         mvc.perform(get("/api/v1/reserva/list"))
-            .andExpect(status().isUnauthorized());
+            .andExpect(status().isUnauthorized())
+            .andExpect(jsonPath("$.code").value("AUTH-001"));
     }
 
     @Test
@@ -46,7 +49,8 @@ class ReservaControllerTest {
     void delete_sinRolAdmin_devuelve403() throws Exception {
         mvc.perform(delete("/api/v1/reserva/delete/1")
                 .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_CLIENTE"))))
-            .andExpect(status().isForbidden());
+            .andExpect(status().isForbidden())
+            .andExpect(jsonPath("$.code").value("AUTH-003"));
     }
 
     @Test
@@ -55,5 +59,21 @@ class ReservaControllerTest {
         mvc.perform(delete("/api/v1/reserva/delete/1")
                 .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_ADMIN"))))
             .andExpect(status().isOk());
+    }
+
+    @Test
+    void rutaInexistente_devuelve404() throws Exception {
+        mvc.perform(get("/api/v1/reserva/no-existe")
+                .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_CLIENTE"))))
+            .andExpect(status().isNotFound())
+            .andExpect(jsonPath("$.code").value("SYS-002"));
+    }
+
+    @Test
+    void metodoNoPermitido_devuelve405() throws Exception {
+        mvc.perform(post("/api/v1/reserva/list")
+                .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_ADMIN"))))
+            .andExpect(status().isMethodNotAllowed())
+            .andExpect(jsonPath("$.code").value("SYS-003"));
     }
 }

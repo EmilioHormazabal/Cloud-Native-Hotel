@@ -7,10 +7,15 @@ function Panel_admin() {
 
     const [showFormulario, setShowFormulario] = useState(false)
     const [servicios, setServicios] = useState([])
+    const [error, setError] = useState(null)
 
     useEffect(()=>{
         const cargarServicios = async() => {
-            setServicios(await listarServicios())
+            try {
+                setServicios(await listarServicios())
+            } catch (e) {
+                setError(e?.response?.data?.message || e.message)
+            }
         }
         cargarServicios()
     },[showFormulario])
@@ -24,9 +29,10 @@ function Panel_admin() {
                 <Formulario_servicios show={setShowFormulario}/>
             }
         </section>
+        {error && <p className="text-danger">No se pudieron cargar los servicios: {error}</p>}
         <section className="row m-0">
-            {servicios.map((s,i)=>(
-                <Tarjeta_servicios id={s.id} key={i} admin/>
+            {servicios.map((s)=>(
+                <Tarjeta_servicios servicio={s} key={s.id} admin/>
             ))}
         </section>
         </>

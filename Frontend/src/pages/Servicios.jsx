@@ -5,19 +5,25 @@ import { listarServicios } from "../services/servicioService"
 function Servicios() {
 
     const [servicios, setServicios] = useState([])
+    const [error, setError] = useState(null)
 
     useEffect(()=>{
         const cargarServicios = async() => {
-            setServicios(await listarServicios())
+            try {
+                setServicios(await listarServicios())
+            } catch (e) {
+                setError(e?.response?.data?.message || e.message)
+            }
         }
         cargarServicios()
     },[])
 
     return(
         <>
+        {error && <p className="text-danger">No se pudieron cargar los servicios: {error}</p>}
         <section className="row m-0">
-            {servicios.map((s,i)=>(
-                <Tarjeta_servicios id={s.id} key={i}/>
+            {servicios.map((s)=>(
+                <Tarjeta_servicios servicio={s} key={s.id}/>
             ))}
         </section>
         </>

@@ -1,5 +1,6 @@
 package Hotel.usuario.entity;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -42,6 +43,7 @@ public class Usuario {
     
     @Column(nullable = false, unique = true, length = 150)
     private String correo;
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     @Column(nullable = false)
     private String contrasenia;
     private Integer telefono;

@@ -6,6 +6,7 @@ import Hotel.usuario.exception.EntidadNoEncontradaException;
 import Hotel.usuario.repository.UsuarioRepository;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -36,6 +37,35 @@ public class UsuarioService {
         return u;
     }
     
+    // El BFF resuelve al usuario por el token, si es su primer acceso se crea aca
+    public Usuario u_por_correo(String correo, String nombre){
+        return rep.findByCorreo(correo)
+                .orElseGet(() -> crearSiNoExiste(correo, nombre));
+    }
+
+    // Dos primeros accesos concurrentes del mismo correo: el que pierde la carrera re-lee
+    private Usuario crearSiNoExiste(String correo, String nombre){
+        try {
+            return rep.save(u_desde_token(correo, nombre));
+        } catch (DataIntegrityViolationException ex) {
+            return rep.findByCorreo(correo)
+                    .orElseThrow(() -> new EntidadNoEncontradaException("USER-006",
+                            "No existe un usuario registrado con el correo: " + correo));
+        }
+    }
+
+    private Usuario u_desde_token(String correo, String nombre){
+        Usuario u = new Usuario();
+        u.setCorreo(correo);
+        u.setNombre(nombre != null && !nombre.isBlank() ? nombre : correo);
+        u.setA_paterno("");
+        u.setRut(0);
+        u.setDv_rut("0");
+        u.setContrasenia("");
+        u.setTipo_usuario("CLIENTE");
+        return u;
+    }
+
     public Usuario u_recuperar(Integer id){
         return rep.findById(id)
                 .orElseThrow(() -> new EntidadNoEncontradaException("USER-005",

@@ -11,14 +11,6 @@ export function getRoles(account) {
     return Array.isArray(roles) ? roles : [];
 }
 
-export function getScopes(account) {
-    if (!account || !account.idTokenClaims) return [];
-    const scp = account.idTokenClaims.scp;
-    if (Array.isArray(scp)) return scp;
-    if (typeof scp === "string") return scp.split(" ");
-    return [];
-}
-
 function decodePayload(token) {
     const b = token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
     return JSON.parse(atob(b + "=".repeat((4 - (b.length % 4)) % 4)));
