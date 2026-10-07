@@ -13,6 +13,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.DataIntegrityViolationException;
 
 @ExtendWith(MockitoExtension.class)
 class UsuarioServiceTest {
@@ -45,5 +46,20 @@ class UsuarioServiceTest {
         assertEquals("nuevo@test.cl", res.getCorreo());
         assertEquals("Nuevo Usuario", res.getNombre());
         assertEquals("CLIENTE", res.getTipo_usuario());
+    }
+
+    @Test
+    void usuarioNuevoConCarreraSeRecuperaDelConflicto() {
+        Usuario existente = new Usuario();
+        existente.setCorreo("carrera@test.cl");
+        when(rep.findByCorreo("carrera@test.cl"))
+                .thenReturn(Optional.empty())
+                .thenReturn(Optional.of(existente));
+        when(rep.save(any(Usuario.class)))
+                .thenThrow(new DataIntegrityViolationException("correo duplicado"));
+
+        Usuario res = ser.u_por_correo("carrera@test.cl", "Carrera Test");
+
+        assertEquals(existente, res);
     }
 }

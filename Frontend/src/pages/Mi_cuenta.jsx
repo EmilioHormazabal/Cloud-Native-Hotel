@@ -60,7 +60,7 @@ function Mi_cuenta() {
                         <dd className="col-sm-8">{textoUsuario(dashboard.usuario)}</dd>
                         <dt className="col-sm-4">Reservas</dt>
                         <dd className="col-sm-8">{textoLista(dashboard.reservas, 'reservas')}</dd>
-                        <dt className="col-sm-4">Servicios</dt>
+                        <dt className="col-sm-4">Servicios en catálogo</dt>
                         <dd className="col-sm-8">{textoLista(dashboard.servicios, 'servicios')}</dd>
                     </dl>
                 )}

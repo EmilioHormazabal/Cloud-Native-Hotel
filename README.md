@@ -4,7 +4,7 @@ Plataforma de gestión hotelera tipo microservicios: 3 microservicios de dominio
 
 **Cómo cumple la rúbrica EP1:**
 - **Indicador 1 — MSAL (60%):** login/logout por redirección de Entra ID, guard de rutas por autenticación y rol (`RequireAuth`), inyección del `Bearer` token en cada petición HTTP, roles/scopes leídos desde los claims del JWT, vistas funcionales.
-- **Indicador 2 — BFF (40%):** microservicio `bff` (Spring Boot 4.1.1, `:8084`) que valida el JWT de Entra ID (`issuer-uri`, `audience`, firma JWKS y vigencia), exige autenticación en todas sus rutas, aplica autorización por rol con `@PreAuthorize` y responde `401 AUTH-001` o `403 AUTH-003`. Agrega usuario + reservas + servicios del usuario del token (`GET /api/v1/bff/dashboard`) reenviando el `Bearer` al API Gateway. La vista "Mi cuenta" del frontend lo consume.
+- **Indicador 2 — BFF (40%):** microservicio `bff` (Spring Boot 4.1.1, `:8084`) que valida el JWT de Entra ID (`issuer-uri`, `audience`, firma JWKS y vigencia), exige autenticación en todas sus rutas, aplica autorización por rol con `@PreAuthorize` y responde `401 AUTH-001` o `403 AUTH-003`. Agrega usuario + reservas + el catálogo de servicios (`GET /api/v1/bff/dashboard`) reenviando el `Bearer` al API Gateway. La vista "Mi cuenta" del frontend lo consume.
 
 ## Arquitectura
 
@@ -157,7 +157,7 @@ Abrir [http://localhost:5173](http://localhost:5173) — el `redirectUri` de MSA
 | `/login` | Iniciar / cerrar sesión | Público |
 | `/servicios` | Listado de servicios (desde BD) | Autenticado |
 | `/servicios/detalle` | Detalle de un servicio | Autenticado |
-| `/mi_cuenta` | Datos del JWT + resumen agregado por el BFF (usuario, reservas, servicios) | Autenticado |
+| `/mi_cuenta` | Datos del JWT + resumen agregado por el BFF (usuario, reservas y catálogo de servicios) | Autenticado |
 | `/mis_reservas` | Reservas del usuario | Autenticado |
 | `/mis_reservas/detalle` | Detalle de reserva | Autenticado |
 | `/PanelAdministradores` | Panel admin (alta/baja/edición de servicios) | Rol `Admin` |
@@ -171,7 +171,7 @@ Abrir [http://localhost:5173](http://localhost:5173) — el `redirectUri` de MSA
 
 1. Abrir `http://localhost:5173`. Vista Inicio.
 2. **Iniciar sesión** con una cuenta demo (Admin o Cliente).
-3. En `/mi_cuenta` se muestran el correo, el rol y los scopes del token, más el resumen agregado por el BFF (usuario, reservas y servicios).
+3. En `/mi_cuenta` se muestran el correo, el rol y los scopes del token, más el resumen agregado por el BFF (usuario, reservas y catálogo de servicios).
 4. Consultar `/servicios` para ver los 4 servicios sembrados (carga vía API Gateway desde el microservicio en AWS, con Bearer).
 5. **Como Admin:** entrar a `/PanelAdministradores` y probar crear / editar / eliminar servicios.
 6. Cerrar sesión con el botón correspondiente.
@@ -221,7 +221,7 @@ Salvo `register` y `login`, **todos** los endpoints requieren un JWT de Entra ID
 
 | Método | Ruta | Descripción | Rol |
 |--------|------|-------------|-----|
-| GET | `/dashboard` | Agrega usuario + reservas + servicios del usuario del token | autenticado |
+| GET | `/dashboard` | Agrega usuario + reservas + el catálogo de servicios | autenticado |
 | GET | `/admin/resumen` | Resumen global: usuarios + reservas + servicios | ADMIN |
 
 ## Pruebas
@@ -233,11 +233,11 @@ npm run lint        # en Frontend (oxlint)
 npm run build       # en Frontend (build de producción)
 ```
 
-Los microservicios suman **30 tests** (usuario 14, reserva 8, servicio 8) y el BFF **14** = **44 tests**: arranque de contexto, mapeo de claims JWT→roles, control de acceso con cuerpos `AUTH-001`/`AUTH-003`, rutas inexistentes y métodos no permitidos (`404 SYS-002` / `405 SYS-003`), resolución por token del endpoint `/me` (con creación del usuario en su primer acceso) y dashboard/resumen por token en el BFF. Para una validación end-to-end contra los microservicios en ejecución, usar `scripts/run_token_tests.ps1` (valida JWT real contra los 3, hace un CRUD completo y una carga de 200 peticiones). `scripts/token_e2e.ps1` es un wrapper que pide el token que el snippet de la consola dejó en el portapapeles y genera un reporte local.
+Los microservicios suman **31 tests** (usuario 15, reserva 8, servicio 8) y el BFF **14** = **45 tests**: arranque de contexto, mapeo de claims JWT→roles, control de acceso con cuerpos `AUTH-001`/`AUTH-003`, rutas inexistentes y métodos no permitidos (`404 SYS-002` / `405 SYS-003`), resolución por token del endpoint `/me` (con creación del usuario en su primer acceso), alta concurrente tolerante a conflicto y dashboard/resumen por token en el BFF. Para una validación end-to-end contra los microservicios en ejecución, usar `scripts/run_token_tests.ps1` (valida JWT real contra los 3, hace un CRUD completo y una carga de 200 peticiones). `scripts/token_e2e.ps1` es un wrapper que pide el token que el snippet de la consola dejó en el portapapeles y genera un reporte local.
 
 ### Análisis estático (SonarQube)
 
-Los **44 tests automatizados** (JUnit 5 + MockMvc) fueron revisados con **SonarQube** (scanner del IDE IntelliJ IDEA), fuente fidedigna de análisis estático, junto con el código de los 4 módulos Java, el frontend y el IaC de Terraform. Los avisos remanentes son **convenciones deliberadas del proyecto, no defectos**: los campos `snake_case` de las entidades (`s_nombre`, `a_paterno`, `dv_rut`, …) mapean las columnas MySQL del modelo de datos ya definido, y los prefijos de los métodos de servicio (`uc_`, `u_`, `sn_`) identifican su capa. El único hallazgo real (índice del array como `key` en las listas de React) fue corregido. En el IaC, la IP pública de las EC2 es deliberada —el API Gateway integra por IP y el laboratorio exige SSH— y quedó explícita en `main.tf`.
+Los **45 tests automatizados** (JUnit 5 + MockMvc) fueron revisados con **SonarQube** (scanner del IDE IntelliJ IDEA), fuente fidedigna de análisis estático, junto con el código de los 4 módulos Java, el frontend y el IaC de Terraform. Los avisos remanentes son **convenciones deliberadas del proyecto, no defectos**: los campos `snake_case` de las entidades (`s_nombre`, `a_paterno`, `dv_rut`, …) mapean las columnas MySQL del modelo de datos ya definido, y los prefijos de los métodos de servicio (`uc_`, `u_`, `sn_`) identifican su capa. El único hallazgo real (índice del array como `key` en las listas de React) fue corregido. En el IaC, la IP pública de las EC2 es deliberada —el API Gateway integra por IP y el laboratorio exige SSH— y quedó explícita en `main.tf`.
 
 ## Infraestructura (AWS)
 
@@ -255,6 +255,8 @@ terraform apply   # responde yes
 ```
 
 Post-apply manual: SCP de los 4 jars a `/opt/apps/` + `systemctl start cn-*`, seeds de usuarios y servicios en MySQL (`seeds/seed_usuarios.sql`, `seeds/seed_servicios.sql`), y `dist/` del frontend a `/var/www/grandhotel`. Outputs: `frontend_public_ip`, `usuario_public_ip`, `microservicios_public_ip`, `api_url` y `db_password` (sensitive).
+
+> **Despliegue limpio (gateway nuevo):** el BFF y el frontend traen por defecto la URL del gateway vigente; al recrear el stack hay que configurar las 3 variables `MICROSERVICIOS_*_URL` (systemd del `cn-bff` o `bff/src/main/resources/application.properties`) con el `api_url` generado, y actualizar las 3 `apiBaseUrl_*` en `Frontend/src/utils/enviroment.ts`. Tras subir el `dist/`, ejecutar `sudo chmod -R a+rX /var/www/grandhotel` para que nginx pueda leer los assets (el scp los deja con permisos restrictivos).
 
 > Si las EC2 se reinician cambian sus IPs públicas: correr `terraform apply` de nuevo para refrescar las integrations. En AWS Academy el lab se corta a las 4 horas y detiene las EC2, así que al volver hay que arrancarlas de nuevo. Tras la demo: `terraform destroy`.
 

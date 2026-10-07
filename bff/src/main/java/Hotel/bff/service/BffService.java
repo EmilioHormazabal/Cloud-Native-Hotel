@@ -85,7 +85,7 @@ public class BffService {
                     .body(Object.class));
         } catch (RestClientException ex) {
             log.error("Fallo al consultar {} [{}]: {}", ruta, url, ex.getMessage());
-            resultado.put("error", ex.getMessage());
+            resultado.put("error", "No se pudo consultar el microservicio");
         }
         return resultado;
     }

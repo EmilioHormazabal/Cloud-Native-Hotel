@@ -64,9 +64,9 @@ class BffServiceTest {
         Map<String, Object> salida = service("http://usuario.test", "http://reserva.test", "http://servicio.test")
                 .b_dashboard("Bearer abc");
 
-        assertNotNull(((Map<?, ?>) salida.get("usuario")).get("error"));
+        assertEquals("No se pudo consultar el microservicio", ((Map<?, ?>) salida.get("usuario")).get("error"));
         assertNull(((Map<?, ?>) salida.get("usuario")).get("datos"));
-        assertNotNull(((Map<?, ?>) salida.get("reservas")).get("error"));
+        assertEquals("No se pudo resolver el usuario del token", ((Map<?, ?>) salida.get("reservas")).get("error"));
         assertNotNull(((Map<?, ?>) salida.get("servicios")).get("datos"));
         server.verify();
     }

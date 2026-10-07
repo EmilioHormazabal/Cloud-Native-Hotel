@@ -18,7 +18,7 @@ public class BffController {
     @Autowired
     private BffService ser;
 
-    /** Agrega usuario + reservas + servicios del usuario del token. */
+    /** Agrega usuario + reservas + el catálogo de servicios. */
     @GetMapping("/dashboard")
     public Map<String, Object> bc_dashboard(@AuthenticationPrincipal Jwt jwt) {
         return ser.b_dashboard("Bearer " + jwt.getTokenValue());
